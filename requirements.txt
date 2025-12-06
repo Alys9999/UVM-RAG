@@ -1,0 +1,18 @@
+# --- Core GPU stack (CUDA 11.8 wheels from download.pytorch.org) ---
+torch==2.7.1+cu118
+torchvision
+torchaudio
+
+# --- Jupyter / kernel ---
+ipykernel>=6.29,<7
+
+# --- RAG / embedding stack ---
+haystack-ai==2.20.0
+sentence-transformers==5.1.2
+pgvector-haystack
+
+# --- PDF / extraction / DB / config ---
+mineru[core]
+pymupdf
+psycopg2-binary
+python-dotenv
