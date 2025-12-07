@@ -11,6 +11,8 @@ import os
 from typing import List, Tuple, Dict, Any
 from dotenv import load_dotenv
 from pathlib import Path
+import time
+
 
 
 import torch
@@ -22,6 +24,8 @@ from haystack.components.builders import PromptBuilder
 from haystack.components.generators import HuggingFaceLocalGenerator
 from haystack_integrations.document_stores.pgvector import PgvectorDocumentStore
 from haystack_integrations.components.retrievers.pgvector import PgvectorEmbeddingRetriever
+from haystack.components.rankers import SentenceTransformersSimilarityRanker
+
 
 from haystack.utils import Secret
 
@@ -96,6 +100,8 @@ retriever = PgvectorEmbeddingRetriever(
     document_store=document_store,
     top_k=RETRIEVER_TOP_K,
 )
+ranker = SentenceTransformersSimilarityRanker()
+ranker.warm_up()
 
 # 3.3 Citation-aware prompt template (non-chat, plain text)
 RAG_PROMPT_TEMPLATE = """
@@ -127,7 +133,7 @@ Instructions for answering:
 Answer:
 """
 
-prompt_builder = PromptBuilder(template=RAG_PROMPT_TEMPLATE)
+prompt_builder = PromptBuilder(template=RAG_PROMPT_TEMPLATE, required_variables=["query"])
 
 # 3.4 Local Hugging Face generator on GPU
 # You may want to tune generation_kwargs for deterministic / concise answers.
@@ -153,14 +159,18 @@ print("[INFO] HuggingFaceLocalGenerator warmed up with model:", HF_LOCAL_MODEL)
 rag_pipeline = Pipeline()
 rag_pipeline.add_component("text_embedder", text_embedder)
 rag_pipeline.add_component("retriever", retriever)
+rag_pipeline.add_component(instance=ranker, name="ranker")
 rag_pipeline.add_component("prompt_builder", prompt_builder)
 rag_pipeline.add_component("llm", hf_generator)
 
 # Connect query embedding → retriever
 rag_pipeline.connect("text_embedder", "retriever")
 
+rag_pipeline.connect("retriever", "ranker.documents")
+
+
 # Connect retrieved docs → prompt builder
-rag_pipeline.connect("retriever", "prompt_builder.documents")
+rag_pipeline.connect("ranker", "prompt_builder.documents")
 
 # Connect prompt → LLM
 rag_pipeline.connect("prompt_builder", "llm")
@@ -204,6 +214,7 @@ def run_rag_query(
         {
             "text_embedder": {"text": query},
             "retriever": {"top_k": retriever_top_k},
+            "ranker": {"query": query, "top_k": answer_top_k},
             "prompt_builder": {"query": query},
         },
         include_outputs_from={"retriever", "prompt_builder", "llm"},
