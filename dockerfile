@@ -63,8 +63,9 @@ ENV STREAMLIT_SERVER_PORT=8501
 
 EXPOSE 8501
 
-ENTRYPOINT ["bash", "-lc"]
 
-CMD ["python3.13 -m pip install -r requirements.txt && \
-      python3.13 -c 'import backend' && \
-      streamlit run app/ui_streamlit.py --server.address=${STREAMLIT_SERVER_ADDRESS} --server.port=${STREAMLIT_SERVER_PORT}"]
+RUN chmod +x /app/docker_entry.sh
+
+EXPOSE 8501
+
+ENTRYPOINT ["/app/docker_entry.sh"]
