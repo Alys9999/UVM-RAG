@@ -44,7 +44,7 @@ WORKDIR /app
 
 # Copy your pip-freeze requirements.txt into the image
 COPY . .
-ENV PG_CONN_STR="postgresql://postgres:postgres@localhost:5432/postgres"
+ENV PG_CONN_STR="postgresql://postgres:postgres@uvm-postgres-cloud:5432/postgres"
 # ------------------------------------------------------------
 # 3. Install PyTorch stack with cu118 EXACTLY as requested
 # ------------------------------------------------------------
