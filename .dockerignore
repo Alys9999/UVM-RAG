@@ -1,0 +1,7 @@
+mineru_out
+work
+data
+uvm-rag
+.env
+04_rag_query_hf_local_pipeline.png
+uvm_db_dump.sql
